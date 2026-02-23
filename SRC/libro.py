@@ -17,3 +17,7 @@ class Libro:
             self.prestado = False
             return True
         return False
+
+    def __str__(self):
+        estado = "Prestado" if self.prestado else "Disponible"
+        return f"{self.titulo} - {self.autor} ({estado})"
