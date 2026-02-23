@@ -1,3 +1,6 @@
+import json
+import os
+
 from libro import Libro
 from usuario import Usuario
 from libro import Libro
@@ -8,6 +11,13 @@ class Biblioteca:
     def __init__(self):
         self.libros = []
         self.usuarios = []
+        self.ruta_datos = os.path.join(
+          os.path.dirname(__file__),
+          "..",
+          "data",
+         "datos.json"
+         )
+        self.cargar_datos()
 
     # -------------------------
     # Métodos de gestión
@@ -17,11 +27,13 @@ class Biblioteca:
         libro = Libro(titulo, autor, isbn, materia)
         self.libros.append(libro)
         print("Libro agregado correctamente.")
+        self.guardar_datos()
 
     def registrar_usuario(self, nombre, id_usuario):
         usuario = Usuario(nombre, id_usuario)
         self.usuarios.append(usuario)
         print("Usuario registrado correctamente.")
+        self.guardar_datos()
 
     def buscar_libro(self, isbn):
         for libro in self.libros:
@@ -38,7 +50,7 @@ class Biblioteca:
     def prestar_libro(self, isbn, id_usuario):
         libro = self.buscar_libro(isbn)
         usuario = self.buscar_usuario(id_usuario)
-
+        
         if libro and usuario:
             if libro.prestar():
                 usuario.libros_prestados.append(libro)
@@ -47,6 +59,7 @@ class Biblioteca:
                 print("El libro ya está prestado.")
         else:
             print("Libro o usuario no encontrado.")
+        self.guardar_datos()
 
     def devolver_libro(self, isbn, id_usuario):
         libro = self.buscar_libro(isbn)
@@ -61,6 +74,7 @@ class Biblioteca:
                 print("Ese usuario no tiene este libro.")
         else:
             print("Libro o usuario no encontrado.")
+        self.guardar_datos()
 
     def menu(self):
         while True:
@@ -106,3 +120,60 @@ class Biblioteca:
 
             else:
                 print("Opción no válida.")
+
+    def guardar_datos(self):
+        print("Guardando datos...")
+        print("Libros:", len(self.libros))
+        print("Usuarios:", len(self.usuarios))
+        print("Ruta:", self.ruta_datos)
+
+        print(os.path.abspath(self.ruta_datos))
+
+        datos = {
+            "libros": [
+                {
+                    "titulo": libro.titulo,
+                    "autor": libro.autor,
+                    "isbn": libro.isbn,
+                    "materia": libro.materia,
+                    "prestado": libro.prestado
+                }
+                for libro in self.libros
+            ],
+            "usuarios": [
+                {
+                    "nombre": usuario.nombre,
+                    "id_usuario": usuario.id_usuario,
+                    "libros_prestados": [libro.isbn for libro in usuario.libros_prestados]
+                }
+                for usuario in self.usuarios
+            ]
+        }
+
+        with open(self.ruta_datos, "w", encoding="utf-8") as f:
+            json.dump(datos, f, indent=4)
+
+    def cargar_datos(self):
+        if not os.path.exists(self.ruta_datos):
+            return
+
+        with open(self.ruta_datos, "r", encoding="utf-8") as f:
+            datos = json.load(f)
+
+        for libro_data in datos.get("libros", []):
+            libro = Libro(
+                libro_data["titulo"],
+                libro_data["autor"],
+                libro_data["isbn"],
+                libro_data["materia"]
+            )
+            libro.prestado = libro_data["prestado"]
+            self.libros.append(libro)
+
+        for usuario_data in datos.get("usuarios", []):
+            usuario = Usuario(
+                usuario_data["nombre"],
+                usuario_data["id_usuario"]
+            )
+            self.usuarios.append(usuario)
+

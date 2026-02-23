@@ -1,4 +1,12 @@
 {
-  "libros": [],
-  "usuarios": []
+    "libros": [
+        {
+            "titulo": "El Quijote",
+            "autor": "Cervantes",
+            "isbn": "clasico",
+            "materia": "1a",
+            "prestado": false
+        }
+    ],
+    "usuarios": []
 }
